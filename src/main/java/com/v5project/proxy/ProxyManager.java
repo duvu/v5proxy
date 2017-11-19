@@ -15,11 +15,11 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProxyManager {
     String REMOTE_HOST = "127.0.0.1";
-    String REMOTE_HOST2 = "127.0.0.1";
-    int REMOTE_PORT = 31272;
-    int REMOTE_PORT2 = 31273;
+    String REMOTE_HOST2 = "149.56.102.183";
+    int REMOTE_PORT = 31271;
+    int REMOTE_PORT2 = 31272;
 
-    int LOCAL_PORT = 31271;
+    int LOCAL_PORT = 31272;
 
     public void init() throws InterruptedException {
 

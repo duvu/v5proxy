@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class ProxyManager {
     String REMOTE_HOST = "127.0.0.1";
-    String REMOTE_HOST2 = "149.56.102.183";
+    String REMOTE_HOST2 = "dev.gpshandle.com";
     int REMOTE_PORT = 31271;
     int REMOTE_PORT2 = 31272;
 

@@ -13,15 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.v5project.proxy;
+package com.v5project.proxy.tcp;
 
 import io.netty.channel.*;
 
-public class DuplicatorBackendHandler extends ChannelInboundHandlerAdapter {
+public class TcpBackendHandler extends ChannelInboundHandlerAdapter {
 
     private final Channel inboundChannel;
 
-    public DuplicatorBackendHandler(Channel inboundChannel) {
+    public TcpBackendHandler(Channel inboundChannel) {
         this.inboundChannel = inboundChannel;
     }
 
@@ -46,12 +46,12 @@ public class DuplicatorBackendHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        DuplicatorFrontendHandler.closeOnFlush(inboundChannel);
+        TcpFrontendHandler.closeOnFlush(inboundChannel);
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
-        DuplicatorFrontendHandler.closeOnFlush(ctx.channel());
+        TcpFrontendHandler.closeOnFlush(ctx.channel());
     }
 }

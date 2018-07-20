@@ -13,14 +13,12 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.v5project.proxy;
+package com.v5project.proxy.udp;
 
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 
-public class DuplicatorProxyInitializer extends ChannelInitializer<SocketChannel> {
+public class UdpProxyInitializer extends ChannelInitializer<SocketChannel> {
 
     private final String remoteHost;
     private final int remotePort;
@@ -28,7 +26,7 @@ public class DuplicatorProxyInitializer extends ChannelInitializer<SocketChannel
     private final String remoteHost2;
     private final int remotePort2;
 
-    public DuplicatorProxyInitializer(String remoteHost, int remotePort, String remoteHost2, int remotePort2) {
+    public UdpProxyInitializer(String remoteHost, int remotePort, String remoteHost2, int remotePort2) {
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
         this.remoteHost2 = remoteHost2;
@@ -37,7 +35,7 @@ public class DuplicatorProxyInitializer extends ChannelInitializer<SocketChannel
 
     @Override
     public void initChannel(SocketChannel ch) {
-        //ch.pipeline().addLast(new HexDumpProxyFrontendHandler(remoteHost,remotePort,remoteHost2,remotePort2));
-        ch.pipeline().addLast(new LoggingHandler(LogLevel.DEBUG),new DuplicatorFrontendHandler(remoteHost, remotePort,remoteHost2,remotePort2));
+        ch.pipeline()
+                .addLast(new UdpFrontendHandler(remoteHost, remotePort,remoteHost2,remotePort2));
     }
 }

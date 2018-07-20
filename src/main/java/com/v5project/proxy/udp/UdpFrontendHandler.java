@@ -13,14 +13,15 @@
  * License for the specific language governing permissions and limitations
  * under the License.
  */
-package com.v5project.proxy;
+package com.v5project.proxy.udp;
 
+import com.v5project.proxy.DiscardServerHandler;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 
-public class DuplicatorFrontendHandler extends ChannelInboundHandlerAdapter {
+public class UdpFrontendHandler extends ChannelInboundHandlerAdapter {
 
     private final String remoteHost;
     private final int remotePort;
@@ -36,7 +37,7 @@ public class DuplicatorFrontendHandler extends ChannelInboundHandlerAdapter {
     // TODO You should change this to your own executor
     //private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    public DuplicatorFrontendHandler(String remoteHost, int remotePort, String remoteHost2, int remotePort2) {
+    public UdpFrontendHandler(String remoteHost, int remotePort, String remoteHost2, int remotePort2) {
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
         this.remoteHost2 = remoteHost2;
@@ -51,7 +52,7 @@ public class DuplicatorFrontendHandler extends ChannelInboundHandlerAdapter {
         Bootstrap server2Bootstrap = new Bootstrap();
         server2Bootstrap.group(inboundChannel.eventLoop())
                 .channel(ctx.channel().getClass())
-                .handler(new DuplicatorBackendHandler(inboundChannel))
+                .handler(new UdpBackendHandler(inboundChannel))
                 .option(ChannelOption.AUTO_READ, false);
         ChannelFuture server2Future = server2Bootstrap.connect(remoteHost, remotePort);
 

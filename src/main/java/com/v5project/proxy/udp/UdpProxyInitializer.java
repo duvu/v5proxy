@@ -15,10 +15,13 @@
  */
 package com.v5project.proxy.udp;
 
+import com.v5project.proxy.ProxiesConfig;
 import io.netty.channel.ChannelInitializer;
-import io.netty.channel.socket.SocketChannel;
+import io.netty.channel.socket.nio.NioDatagramChannel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class UdpProxyInitializer extends ChannelInitializer<SocketChannel> {
+public class UdpProxyInitializer extends ChannelInitializer<NioDatagramChannel> {
 
     private final String remoteHost;
     private final int remotePort;
@@ -26,15 +29,18 @@ public class UdpProxyInitializer extends ChannelInitializer<SocketChannel> {
     private final String remoteHost2;
     private final int remotePort2;
 
-    public UdpProxyInitializer(String remoteHost, int remotePort, String remoteHost2, int remotePort2) {
-        this.remoteHost = remoteHost;
-        this.remotePort = remotePort;
-        this.remoteHost2 = remoteHost2;
-        this.remotePort2 = remotePort2;
+    Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+
+    public UdpProxyInitializer(ProxiesConfig.Proxy proxy) {
+        this.remoteHost = proxy.getRemoteList().get(0).getHost();
+        this.remotePort = proxy.getRemoteList().get(0).getPort();
+        this.remoteHost2 = proxy.getRemoteList().get(1).getHost();
+        this.remotePort2 = proxy.getRemoteList().get(1).getPort();
     }
 
     @Override
-    public void initChannel(SocketChannel ch) {
+    protected void initChannel(NioDatagramChannel ch) throws Exception {
+        LOGGER.info("initChannel ...");
         ch.pipeline()
                 .addLast(new UdpFrontendHandler(remoteHost, remotePort,remoteHost2,remotePort2));
     }

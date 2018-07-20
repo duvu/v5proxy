@@ -88,7 +88,7 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
     // You can keep this the same below or use the commented out section
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object buf) {
-        System.out.println("Reading data ...");
+        System.out.println("[>_] TCP ...");
         // You need to reference count the message +1
         ByteBuf msg  = (ByteBuf)buf;
         msg.retain();

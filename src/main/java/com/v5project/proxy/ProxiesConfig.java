@@ -15,7 +15,7 @@ import java.util.List;
 @Getter @Setter
 @Configuration
 @PropertySource("classpath:proxies-config.properties")
-@ConfigurationProperties
+@ConfigurationProperties(prefix = "vd5")
 public class ProxiesConfig {
     private int bossNThread;
     private int workerNThread;

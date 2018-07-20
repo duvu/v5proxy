@@ -15,6 +15,7 @@ public class StartupListener implements ApplicationListener<ApplicationReadyEven
     private final Logger LOGGER = LoggerFactory.getLogger(getClass());
     private final ProxyManager proxyManager;
 
+
     public StartupListener(ProxyManager proxyManager) {
         this.proxyManager = proxyManager;
     }

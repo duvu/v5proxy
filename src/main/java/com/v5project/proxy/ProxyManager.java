@@ -69,7 +69,6 @@ public class ProxyManager {
                     Bootstrap bootstrapping = new Bootstrap();
                     bootstrapping.group(bossGroup)
                             .channel(NioDatagramChannel.class)
-                            .handler(new LoggingHandler(LogLevel.INFO))
                             .handler(new UdpProxyInitializer(proxy))
                             .bind(proxy.getPort());
             }

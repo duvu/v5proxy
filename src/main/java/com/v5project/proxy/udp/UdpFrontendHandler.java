@@ -21,6 +21,8 @@ import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.socket.DatagramPacket;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UdpFrontendHandler extends ChannelInboundHandlerAdapter {
 
@@ -30,13 +32,10 @@ public class UdpFrontendHandler extends ChannelInboundHandlerAdapter {
     private final String remoteHost2;
     private final int remotePort2;
 
-    // As we use inboundChannel.eventLoop() when buildling the Bootstrap this does not need to be volatile as
-    // the server2OutboundChannel will use the same EventLoop (and therefore Thread) as the inboundChannel.
-    private Channel server2OutboundChannel;
-    private Channel server3OutboundChannel;
+    private Channel s2oChannel;
+    private Channel s3oChannel;
 
-    // TODO You should change this to your own executor
-    //private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    private final Logger LOGGER = LoggerFactory.getLogger(getClass());
 
     public UdpFrontendHandler(String remoteHost, int remotePort, String remoteHost2, int remotePort2) {
         this.remoteHost = remoteHost;
@@ -53,118 +52,80 @@ public class UdpFrontendHandler extends ChannelInboundHandlerAdapter {
         Bootstrap server2Bootstrap = new Bootstrap();
         server2Bootstrap.group(inboundChannel.eventLoop())
                 .channel(ctx.channel().getClass())
-                //.handler(new UdpBackendHandler(inboundChannel))
                 .handler(new DiscardServerHandler())
                 .option(ChannelOption.AUTO_READ, false);
         ChannelFuture server2Future = server2Bootstrap.connect(remoteHost, remotePort);
 
-        server2OutboundChannel = server2Future.channel();
-//        server2Future.addListener(new ChannelFutureListener() {
-//            @Override
-//            public void operationComplete(ChannelFuture future) {
-//                if (future.isSuccess()) {
-//                    // connection complete start to read first data
-//                    inboundChannel.read();
-//                } else {
-//                    // Close the connection if the connection attempt has failed.
-//                    inboundChannel.close();
-//                }
-//            }
-//        });
+        s2oChannel = server2Future.channel();
 
         // Start the connection attempt to SERVER 3
         Bootstrap server3Bootstrap = new Bootstrap();
         server3Bootstrap.group(inboundChannel.eventLoop())
                 .channel(ctx.channel().getClass())
-                // You are only writing traffic to server 3 so you do not need to have a handler for the inbound traffic
                 .handler(new DiscardServerHandler()) // EDIT
                 .option(ChannelOption.AUTO_READ, false);
         ChannelFuture server3Future = server3Bootstrap.connect(remoteHost2, remotePort2);
-        server3OutboundChannel = server3Future.channel();
-        //System.out.println("High Water Mark" + server3OutboundChannel.config().getWriteBufferHighWaterMark());
-        // Here we are going to add channels to channel group to save bytebuf work
-        //channels.add(server2OutboundChannel);
-        //channels.add(server3OutboundChannel);
+        s3oChannel = server3Future.channel();
     }
 
     // You can keep this the same below or use the commented out section
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object buf) {
-        System.out.println("[>_] UDP ...");
-
+        ByteBuf msg = null;
         if (buf instanceof DatagramPacket) {
-            ByteBuf msg = ((DatagramPacket) buf).content();
+            System.out.println("[>_] UDP DatagramPacket");
+            msg = ((DatagramPacket) buf).content();
             msg.retain();
             forward(ctx, msg);
+        } else {
+            System.out.println("Not a DatagramPacket");
+            try {
+                msg  = (ByteBuf)buf;
+                msg.retain();
+            } catch (Exception e) {
+                e.printStackTrace();
+            } finally {
+                forward(ctx, msg);
+            }
         }
-        //ByteBuf msg  = (ByteBuf)buf;
-
-
-
-        // Optional to the above code instead channel writing automatically cares for reference counting for you
-//        channels.writeAndFlush(msg).addListeners(new ChannelFutureListener() {
-//
-//            @Override
-//            public void operationComplete(ChannelFuture future) throws Exception {
-//                if (future.isSuccess()) {
-//                    // was able to flush out data, start to read the next chunk
-//                    ctx.channel().read();
-//                } else {
-//                    future.channel().close();
-//                }
-//            }
-//        });
     }
 
     private void forward(final ChannelHandlerContext ctx, ByteBuf msg) {
 
-        if (server2OutboundChannel.isActive()) {
-            server2OutboundChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+        if (s2oChannel.isActive()) {
+            s2oChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) {
                     if (future.isSuccess()) {
-                        // was able to flush out data, start to read the next chunk
                         ctx.channel().read();
-                    } else {
-                        future.channel().close();
+                        LOGGER.info("[>_] host#" + remoteHost + ":" + remotePort);
                     }
                 }
             });
         }
 
-        if (server3OutboundChannel.isActive()) {
-            //if(server3OutboundChannel.isWritable()) {
-            //System.out.println("Writing and Flushing");
-            server3OutboundChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+        if (s3oChannel.isActive()) {
+            s3oChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
                 @Override
                 public void operationComplete(ChannelFuture future) {
                     if (future.isSuccess()) {
-                        // was able to flush out data, start to read the next chunk
-                        //System.out.println(server3OutboundChannel.bytesBeforeUnwritable());
                         ctx.channel().read();
-                    } else {
-                        future.channel().close();
+                        LOGGER.info("[>_] host#" + remoteHost2 + ":" + remotePort2);
                     }
                 }
             });
-            //}else
-            //System.out.println("Loop 1: Channel is no longer writeable");
         }
 
     }
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        if (server2OutboundChannel != null) {
-            closeOnFlush(server2OutboundChannel);
+        if (s2oChannel != null) {
+            closeOnFlush(s2oChannel);
         }
-        if (server3OutboundChannel != null) {
-            closeOnFlush(server3OutboundChannel);
+        if (s3oChannel != null) {
+            closeOnFlush(s3oChannel);
         }
-
-
-        // Optionally can do this
-//        channels.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
     }
 
     @Override
@@ -176,7 +137,7 @@ public class UdpFrontendHandler extends ChannelInboundHandlerAdapter {
     /**
      * Closes the specified channel after all queued write requests are flushed.
      */
-    static void closeOnFlush(Channel ch) {
+    private void closeOnFlush(Channel ch) {
         if (ch.isActive()) {
             ch.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
         }

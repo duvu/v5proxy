@@ -18,6 +18,10 @@ package com.v5project.proxy.udp;
 import com.v5project.proxy.ProxiesConfig;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.nio.NioDatagramChannel;
+import io.netty.handler.logging.LogLevel;
+import io.netty.handler.logging.LoggingHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,6 +46,7 @@ public class UdpProxyInitializer extends ChannelInitializer<NioDatagramChannel> 
     protected void initChannel(NioDatagramChannel ch) throws Exception {
         LOGGER.info("initChannel ...");
         ch.pipeline()
+                .addLast(new LoggingHandler(LogLevel.INFO))
                 .addLast(new UdpFrontendHandler(remoteHost, remotePort,remoteHost2,remotePort2));
     }
 }

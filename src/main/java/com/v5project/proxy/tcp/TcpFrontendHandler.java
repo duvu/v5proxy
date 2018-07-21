@@ -108,8 +108,6 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
         }
 
         if (server3OutboundChannel.isActive()) {
-            //if(server3OutboundChannel.isWritable()) {
-                //System.out.println("Writing and Flushing");
                 server3OutboundChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
                             @Override
                             public void operationComplete(ChannelFuture future) {
@@ -125,21 +123,6 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
             //}else
                 //System.out.println("Loop 1: Channel is no longer writeable");
         }
-
-
-        // Optional to the above code instead channel writing automatically cares for reference counting for you
-//        channels.writeAndFlush(msg).addListeners(new ChannelFutureListener() {
-//
-//            @Override
-//            public void operationComplete(ChannelFuture future) throws Exception {
-//                if (future.isSuccess()) {
-//                    // was able to flush out data, start to read the next chunk
-//                    ctx.channel().read();
-//                } else {
-//                    future.channel().close();
-//                }
-//            }
-//        });
     }
 
     @Override

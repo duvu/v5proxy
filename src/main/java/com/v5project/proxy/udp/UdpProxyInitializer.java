@@ -46,7 +46,7 @@ public class UdpProxyInitializer extends ChannelInitializer<NioDatagramChannel> 
     protected void initChannel(NioDatagramChannel ch) throws Exception {
         LOGGER.info("initChannel ...");
         ch.pipeline()
-                .addLast(new LoggingHandler(LogLevel.INFO))
+                .addLast(new LoggingHandler(LogLevel.DEBUG))
                 .addLast(new UdpFrontendHandler(remoteHost, remotePort,remoteHost2,remotePort2));
     }
 }

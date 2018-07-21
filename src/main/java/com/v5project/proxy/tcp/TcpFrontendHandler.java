@@ -101,7 +101,7 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
                         // was able to flush out data, start to read the next chunk
                         ctx.channel().read();
                     } else {
-                        future.channel().close();
+                        //future.channel().close();
                     }
                 }
             });
@@ -116,12 +116,10 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
                                     //System.out.println(server3OutboundChannel.bytesBeforeUnwritable());
                                     ctx.channel().read();
                                 } else {
-                                    future.channel().close();
+                                    //future.channel().close();
                                 }
                             }
                         });
-            //}else
-                //System.out.println("Loop 1: Channel is no longer writeable");
         }
     }
 

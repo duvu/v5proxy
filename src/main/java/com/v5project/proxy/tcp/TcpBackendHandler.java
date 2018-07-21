@@ -38,7 +38,7 @@ public class TcpBackendHandler extends ChannelInboundHandlerAdapter {
                 if (future.isSuccess()) {
                     ctx.channel().read();
                 } else {
-                    future.channel().close();
+                    //future.channel().close();
                 }
             }
         });

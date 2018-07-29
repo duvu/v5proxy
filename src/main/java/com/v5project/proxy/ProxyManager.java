@@ -11,6 +11,7 @@ import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
+import io.netty.util.AttributeKey;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +25,8 @@ import java.util.List;
  */
 @Component
 public class ProxyManager {
-    //    String REMOTE_HOST = "127.0.0.1";
-    //    String REMOTE_HOST2 = "dev.gpshandle.com";
-    //    int REMOTE_PORT = 31271;
-    //    int REMOTE_PORT2 = 31272;
-    //    int LOCAL_PORT = 31272;
+    public static final String  PROXY_CHANNEL_TYPES = "PROXY_CHANNEL_TYPES";
+    public static final AttributeKey<ChannelType> PROXY_CHANNEL_TYPE = AttributeKey.valueOf(PROXY_CHANNEL_TYPES);
 
     private final ProxiesConfig proxiesConfig;
     //-- close later
@@ -36,6 +34,11 @@ public class ProxyManager {
     private final NioEventLoopGroup workerGroup;
 
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
+
+    public enum ChannelType {
+        CHANNEL_TCP,
+        CHANNEL_UDP
+    }
 
     @Autowired
     public ProxyManager(ProxiesConfig proxiesConfig) {
@@ -64,12 +67,14 @@ public class ProxyManager {
                             .handler(new LoggingHandler(LogLevel.DEBUG))
                             .childHandler(new TcpProxyInitializer(proxy))
                             .childOption(ChannelOption.AUTO_READ, false)
+                            .childAttr(PROXY_CHANNEL_TYPE, ChannelType.CHANNEL_TCP)
                             .bind(proxy.getPort());
             } else {
                     Bootstrap bootstrapping = new Bootstrap();
                     bootstrapping.group(bossGroup)
                             .channel(NioDatagramChannel.class)
                             .handler(new UdpProxyInitializer(proxy))
+                            .attr(PROXY_CHANNEL_TYPE, ChannelType.CHANNEL_UDP)
                             .bind(proxy.getPort());
             }
         }

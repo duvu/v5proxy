@@ -15,13 +15,11 @@
  */
 package com.v5project.proxy.udp;
 
-import com.v5project.proxy.ProxiesConfig;
+import com.v5project.proxy.config.ProxyEntry;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,11 +33,11 @@ public class UdpProxyInitializer extends ChannelInitializer<NioDatagramChannel> 
 
     Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
-    public UdpProxyInitializer(ProxiesConfig.Proxy proxy) {
-        this.remoteHost = proxy.getRemoteList().get(0).getHost();
-        this.remotePort = proxy.getRemoteList().get(0).getPort();
-        this.remoteHost2 = proxy.getRemoteList().get(1).getHost();
-        this.remotePort2 = proxy.getRemoteList().get(1).getPort();
+    public UdpProxyInitializer(ProxyEntry proxyEntry) {
+        this.remoteHost = proxyEntry.getRemoteList().get(0).getHost();
+        this.remotePort = proxyEntry.getRemoteList().get(0).getPort();
+        this.remoteHost2 = proxyEntry.getRemoteList().get(1).getHost();
+        this.remotePort2 = proxyEntry.getRemoteList().get(1).getPort();
     }
 
     @Override

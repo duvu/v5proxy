@@ -20,6 +20,9 @@ import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.util.concurrent.GlobalEventExecutor;
 
 public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
 
@@ -35,7 +38,7 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
     private Channel server3OutboundChannel;
 
     // TODO You should change this to your own executor
-    //private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
+    private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     public TcpFrontendHandler(String remoteHost, int remotePort, String remoteHost2, int remotePort2) {
         this.remoteHost = remoteHost;

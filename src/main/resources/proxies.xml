@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<configuration>
+    <proxies>
+        <thread-pool>
+            <boss>2</boss>
+            <worker>4</worker>
+            <worker-udp>4</worker-udp>
+        </thread-pool>
+
+        <proxy>
+            <port>31272</port>
+            <duplex>true</duplex>
+            <enabled>true</enabled>
+            <remotes>
+                <remote>
+                    <host>127.0.0.1</host>
+                    <port>31271</port>
+                    <transparent>true</transparent>
+                </remote>
+                <remote>
+                    <host>dev.gpshandle.com</host>
+                    <port>31272</port>
+                    <transparent>false</transparent>
+                </remote>
+            </remotes>
+        </proxy>
+
+        <proxy>
+            <port>23456</port>
+            <duplex>false</duplex>
+            <enabled>true</enabled>
+            <remotes>
+                <remote>
+                    <host>127.0.0.1</host>
+                    <port>23457</port>
+                    <transparent>true</transparent>
+                </remote>
+                <remote>
+                    <host>dev.gpshandle.com</host>
+                    <port>37493</port>
+                    <transparent>false</transparent>
+                </remote>
+            </remotes>
+        </proxy>
+
+        <proxy>
+            <port>37493</port>
+            <duplex>false</duplex>
+            <enabled>true</enabled>
+            <remotes>
+                <remote>
+                    <host>127.0.0.1</host>
+                    <port>23457</port>
+                    <transparent>true</transparent>
+                </remote>
+                <remote>
+                    <host>dev.gpshandle.com</host>
+                    <port>37493</port>
+                    <transparent>false</transparent>
+                </remote>
+            </remotes>
+        </proxy>
+
+        <proxy>
+            <port>37494</port>
+            <duplex>false</duplex>
+            <enabled>true</enabled>
+            <remotes>
+                <remote>
+                    <host>127.0.0.1</host>
+                    <port>23457</port>
+                    <transparent>true</transparent>
+                </remote>
+                <remote>
+                    <host>dev.gpshandle.com</host>
+                    <port>37493</port>
+                    <transparent>false</transparent>
+                </remote>
+            </remotes>
+        </proxy>
+    </proxies>
+</configuration>

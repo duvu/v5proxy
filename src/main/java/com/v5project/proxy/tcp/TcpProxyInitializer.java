@@ -15,7 +15,7 @@
  */
 package com.v5project.proxy.tcp;
 
-import com.v5project.proxy.ProxiesConfig;
+import com.v5project.proxy.config.ProxyEntry;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.socket.SocketChannel;
 
@@ -26,11 +26,11 @@ public class TcpProxyInitializer extends ChannelInitializer<SocketChannel> {
     private final String remoteHost2;
     private final int remotePort2;
 
-    public TcpProxyInitializer(ProxiesConfig.Proxy proxy) {
-                this.remoteHost = proxy.getRemoteList().get(0).getHost();
-                this.remotePort = proxy.getRemoteList().get(0).getPort();
-                this.remoteHost2 = proxy.getRemoteList().get(1).getHost();
-                this.remotePort2 = proxy.getRemoteList().get(1).getPort();
+    public TcpProxyInitializer(ProxyEntry proxyEntry) {
+                this.remoteHost = proxyEntry.getRemoteList().get(0).getHost();
+                this.remotePort = proxyEntry.getRemoteList().get(0).getPort();
+                this.remoteHost2 = proxyEntry.getRemoteList().get(1).getHost();
+                this.remotePort2 = proxyEntry.getRemoteList().get(1).getPort();
     }
 
     @Override

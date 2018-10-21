@@ -1,5 +1,5 @@
 ### Move configuration file to database (Derby?)
-### Implement transparent proxy
+### Implement transparent proxyEntry
 ### Cache request?
 
 ### Implement Webapp

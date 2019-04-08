@@ -23,6 +23,8 @@ import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
 
@@ -36,7 +38,7 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
     // the server2OutboundChannel will use the same EventLoop (and therefore Thread) as the inboundChannel.
     private Channel server2OutboundChannel;
     private Channel server3OutboundChannel;
-
+    Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     // TODO You should change this to your own executor
     private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
@@ -91,7 +93,6 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
     // You can keep this the same below or use the commented out section
     @Override
     public void channelRead(final ChannelHandlerContext ctx, Object buf) {
-        System.out.println("[>_] TCP ...");
         // You need to reference count the message +1
         ByteBuf msg  = (ByteBuf)buf;
         msg.retain();
@@ -104,7 +105,7 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
                         // was able to flush out data, start to read the next chunk
                         ctx.channel().read();
                     } else {
-                        //future.channel().close();
+                        future.channel().close();
                     }
                 }
             });
@@ -115,11 +116,10 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
                             @Override
                             public void operationComplete(ChannelFuture future) {
                                 if (future.isSuccess()) {
-                                    // was able to flush out data, start to read the next chunk
-                                    //System.out.println(server3OutboundChannel.bytesBeforeUnwritable());
+                                    LOGGER.info(String.format("Sent to: %s", remoteHost2));
                                     ctx.channel().read();
                                 } else {
-                                    //future.channel().close();
+                                    future.channel().close();
                                 }
                             }
                         });

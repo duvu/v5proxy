@@ -61,9 +61,9 @@ public class ProxyManager {
                     ServerBootstrap b = new ServerBootstrap();
                     b.group(bossGroup, workerGroup)
                             .channel(NioServerSocketChannel.class)
-                            .handler(new LoggingHandler(LogLevel.DEBUG))
+                            //.handler(new LoggingHandler(LogLevel.ERROR))
                             .childHandler(new TcpProxyInitializer(proxy))
-                            .childOption(ChannelOption.AUTO_READ, false);
+                            .childOption(ChannelOption.AUTO_READ, true);
                 Channel channel = b.bind(proxy.getPort()).sync().channel();
 
             } else {

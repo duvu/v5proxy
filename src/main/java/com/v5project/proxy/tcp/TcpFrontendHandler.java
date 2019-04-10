@@ -96,33 +96,24 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
         // You need to reference count the message +1
         ByteBuf msg  = (ByteBuf)buf;
         msg.retain();
+        writeToChannel(ctx, buf, server2OutboundChannel);
+        writeToChannel(ctx, buf, server3OutboundChannel);
+    }
 
-        if (server2OutboundChannel.isActive()) {
-            server2OutboundChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+    private void writeToChannel(final ChannelHandlerContext ctx, Object msg, final Channel channel) {
+        if (channel.isActive()) {
+            channel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+
                 @Override
-                public void operationComplete(ChannelFuture future) {
+                public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
-                        // was able to flush out data, start to read the next chunk
+                        LOGGER.info(String.format("Sent to %s", channel.remoteAddress().toString()));
                         ctx.channel().read();
                     } else {
                         future.channel().close();
                     }
                 }
             });
-        }
-
-        if (server3OutboundChannel.isActive()) {
-                server3OutboundChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
-                            @Override
-                            public void operationComplete(ChannelFuture future) {
-                                if (future.isSuccess()) {
-                                    LOGGER.info(String.format("Sent to: %s", remoteHost2));
-                                    ctx.channel().read();
-                                } else {
-                                    future.channel().close();
-                                }
-                            }
-                        });
         }
     }
 

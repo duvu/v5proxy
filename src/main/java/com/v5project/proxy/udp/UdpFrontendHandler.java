@@ -92,30 +92,23 @@ public class UdpFrontendHandler extends ChannelInboundHandlerAdapter {
 
     private void forward(final ChannelHandlerContext ctx, ByteBuf msg) {
 
-        if (s2oChannel.isActive()) {
-            s2oChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+        forwardToChannel(ctx, msg, s2oChannel);
+        forwardToChannel(ctx, msg, s3oChannel);
+    }
+
+    private void forwardToChannel(final ChannelHandlerContext ctx, ByteBuf msg, final Channel channel) {
+        if (channel.isActive()) {
+            channel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
+
                 @Override
-                public void operationComplete(ChannelFuture future) {
+                public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
                         ctx.channel().read();
-                        LOGGER.info("[>_] host#" + remoteHost + ":" + remotePort);
+                        LOGGER.info(channel.remoteAddress().toString());
                     }
                 }
             });
         }
-
-        if (s3oChannel.isActive()) {
-            s3oChannel.writeAndFlush(msg).addListener(new ChannelFutureListener() {
-                @Override
-                public void operationComplete(ChannelFuture future) {
-                    if (future.isSuccess()) {
-                        ctx.channel().read();
-                        LOGGER.info("[>_] host#" + remoteHost2 + ":" + remotePort2);
-                    }
-                }
-            });
-        }
-
     }
 
     @Override

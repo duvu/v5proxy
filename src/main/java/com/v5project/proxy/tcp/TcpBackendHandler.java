@@ -21,7 +21,7 @@ public class TcpBackendHandler extends ChannelInboundHandlerAdapter {
 
     private final Channel inboundChannel;
 
-    public TcpBackendHandler(Channel inboundChannel) {
+    TcpBackendHandler(Channel inboundChannel) {
         this.inboundChannel = inboundChannel;
     }
 
@@ -46,12 +46,14 @@ public class TcpBackendHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelInactive(ChannelHandlerContext ctx) {
-        TcpFrontendHandler.closeOnFlush(inboundChannel);
+        if (inboundChannel.isActive()) {
+            inboundChannel.close();
+        }
     }
 
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
         cause.printStackTrace();
-        TcpFrontendHandler.closeOnFlush(ctx.channel());
+        ctx.close();
     }
 }

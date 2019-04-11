@@ -22,6 +22,7 @@ import io.netty.buffer.Unpooled;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.group.DefaultChannelGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.util.concurrent.GlobalEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +43,9 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
     // TODO You should change this to your own executor
     private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
+    final EventLoopGroup worker1 = new NioEventLoopGroup(4);
+    final EventLoopGroup worker2 = new NioEventLoopGroup(8);
+
     public TcpFrontendHandler(String remoteHost, int remotePort, String remoteHost2, int remotePort2) {
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
@@ -53,13 +57,12 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
     public void channelActive(ChannelHandlerContext ctx) {
         final Channel inboundChannel = ctx.channel();
 
-        // Start the connection attempt to SERVER 2
-        Bootstrap server2Bootstrap = new Bootstrap();
-        server2Bootstrap.group(inboundChannel.eventLoop())
+        Bootstrap fwd1 = new Bootstrap();
+        fwd1.group(inboundChannel.eventLoop())
                 .channel(ctx.channel().getClass())
                 .handler(new TcpBackendHandler(inboundChannel))
                 .option(ChannelOption.AUTO_READ, false);
-        ChannelFuture server2Future = server2Bootstrap.connect(remoteHost, remotePort);
+        ChannelFuture server2Future = fwd1.connect(remoteHost, remotePort);
 
         server2OutboundChannel = server2Future.channel();
         server2Future.addListener(new ChannelFutureListener() {
@@ -76,18 +79,17 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
         });
 
         // Start the connection attempt to SERVER 3
-        Bootstrap server3Bootstrap = new Bootstrap();
-        server3Bootstrap.group(inboundChannel.eventLoop())
+        Bootstrap fwd2 = new Bootstrap();
+        fwd2.group(inboundChannel.eventLoop())
                 .channel(ctx.channel().getClass())
-                // You are only writing traffic to server 3 so you do not need to have a handler for the inbound traffic
                 .handler(new DiscardServerHandler()) // EDIT
                 .option(ChannelOption.AUTO_READ, false);
-        ChannelFuture server3Future = server3Bootstrap.connect(remoteHost2, remotePort2);
+        ChannelFuture server3Future = fwd2.connect(remoteHost2, remotePort2);
         server3OutboundChannel = server3Future.channel();
         //System.out.println("High Water Mark" + server3OutboundChannel.config().getWriteBufferHighWaterMark());
         // Here we are going to add channels to channel group to save bytebuf work
-        //channels.add(server2OutboundChannel);
-        //channels.add(server3OutboundChannel);
+        channels.add(server2OutboundChannel);
+        channels.add(server3OutboundChannel);
     }
 
     // You can keep this the same below or use the commented out section

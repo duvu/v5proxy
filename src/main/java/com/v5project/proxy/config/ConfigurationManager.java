@@ -42,7 +42,7 @@ public final class ConfigurationManager {
     }
 
     public static int getThreadPoolWorker() {
-        return config.getInt("proxies.thread-pool.worker", 4);
+        return config.getInt("proxies.thread-pool.worker", 8);
     }
 
     public static int getThreadPoolWorkerUdp() {

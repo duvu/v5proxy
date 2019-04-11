@@ -3,7 +3,7 @@
     <proxies>
         <thread-pool>
             <boss>2</boss>
-            <worker>4</worker>
+            <worker>8</worker>
             <worker-udp>4</worker-udp>
         </thread-pool>
 

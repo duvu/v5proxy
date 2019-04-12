@@ -28,7 +28,7 @@
             <totalSizeCap>500MB</totalSizeCap>
         </rollingPolicy>
     </appender>
-    <root level="info,warn,error,debug">
+    <root>
         <appender-ref ref="COMMON_LOG_FILE"/>
     </root>
 </configuration>

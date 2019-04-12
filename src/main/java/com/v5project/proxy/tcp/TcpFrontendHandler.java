@@ -16,6 +16,8 @@
 package com.v5project.proxy.tcp;
 
 import com.v5project.proxy.DiscardServerHandler;
+import com.v5project.proxy.QueueManager;
+import com.v5project.proxy.TrakObject;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -34,13 +36,9 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
 
     private final String remoteHost2;
     private final int remotePort2;
-
-    // As we use inboundChannel.eventLoop() when buildling the Bootstrap this does not need to be volatile as
-    // the server2OutboundChannel will use the same EventLoop (and therefore Thread) as the inboundChannel.
     private Channel server2OutboundChannel;
-    private Channel server3OutboundChannel;
+
     Logger LOGGER = LoggerFactory.getLogger(this.getClass());
-    // TODO You should change this to your own executor
     private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     final EventLoopGroup worker1 = new NioEventLoopGroup(4);
@@ -78,18 +76,7 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
             }
         });
 
-        // Start the connection attempt to SERVER 3
-        Bootstrap fwd2 = new Bootstrap();
-        fwd2.group(inboundChannel.eventLoop())
-                .channel(ctx.channel().getClass())
-                .handler(new DiscardServerHandler()) // EDIT
-                .option(ChannelOption.AUTO_READ, false);
-        ChannelFuture server3Future = fwd2.connect(remoteHost2, remotePort2);
-        server3OutboundChannel = server3Future.channel();
-        //System.out.println("High Water Mark" + server3OutboundChannel.config().getWriteBufferHighWaterMark());
-        // Here we are going to add channels to channel group to save bytebuf work
         channels.add(server2OutboundChannel);
-        channels.add(server3OutboundChannel);
     }
 
     // You can keep this the same below or use the commented out section
@@ -98,8 +85,9 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
         // You need to reference count the message +1
         ByteBuf msg  = (ByteBuf)buf;
         msg.retain();
-        writeToChannel(ctx, buf, server2OutboundChannel);
-        writeToChannel(ctx, buf, server3OutboundChannel);
+        writeToChannel(ctx, msg, server2OutboundChannel);
+        // put to a Queue
+        QueueManager.getInstance().put(new TrakObject(remoteHost2, remotePort2, msg.array()));
     }
 
     private void writeToChannel(final ChannelHandlerContext ctx, Object msg, final Channel channel) {
@@ -124,13 +112,6 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
         if (server2OutboundChannel != null) {
             closeOnFlush(server2OutboundChannel);
         }
-        if (server3OutboundChannel != null) {
-            closeOnFlush(server3OutboundChannel);
-        }
-
-
-        // Optionally can do this
-//        channels.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
     }
 
     @Override

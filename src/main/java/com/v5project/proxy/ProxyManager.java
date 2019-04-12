@@ -3,14 +3,18 @@ package com.v5project.proxy;
 import com.v5project.proxy.config.ConfigurationManager;
 import com.v5project.proxy.config.ProxyEntry;
 import com.v5project.proxy.tcp.TcpProxyInitializer;
+import com.v5project.proxy.tcp.TcpServerHandler;
 import com.v5project.proxy.udp.UdpProxyInitializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +29,7 @@ public class ProxyManager {
     //-- close later
     private final NioEventLoopGroup bossGroup;
     private final NioEventLoopGroup workerGroup;
+    private final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
@@ -62,6 +67,14 @@ public class ProxyManager {
                             .childHandler(new TcpProxyInitializer(proxy))
                             .childOption(ChannelOption.AUTO_READ, true);
                 Channel channel = b.bind(proxy.getPort()).sync().channel();
+                channelGroup.add(channel);
+
+                ServerBootstrap b1 = new ServerBootstrap();
+                b1.group(workerGroup, workerGroup)
+                        .channel(NioServerSocketChannel.class)
+                        .childHandler(new TcpServerHandler());
+                Channel channel1 = b1.bind(proxy.getRemoteList().get(1).getPort()).channel();
+                channelGroup.add(channel1);
 
             } else {
                     Bootstrap b = new Bootstrap();
@@ -76,6 +89,7 @@ public class ProxyManager {
     @PreDestroy
     public void onDestroy() {
         LOGGER.info("Shutting down the proxy");
+        channelGroup.close().awaitUninterruptibly();
         try {
             bossGroup.shutdownGracefully();
             workerGroup.shutdownGracefully();

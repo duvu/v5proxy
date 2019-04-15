@@ -16,6 +16,7 @@
 package com.v5project.proxy.tcp;
 
 import com.v5project.proxy.DiscardServerHandler;
+import com.v5project.proxy.EventLoopFactory;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -42,9 +43,6 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
     Logger LOGGER = LoggerFactory.getLogger(this.getClass());
     // TODO You should change this to your own executor
     private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-
-    final EventLoopGroup worker1 = new NioEventLoopGroup(4);
-    final EventLoopGroup worker2 = new NioEventLoopGroup(8);
 
     public TcpFrontendHandler(String remoteHost, int remotePort, String remoteHost2, int remotePort2) {
         this.remoteHost = remoteHost;
@@ -80,7 +78,7 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
 
         // Start the connection attempt to SERVER 3
         Bootstrap fwd2 = new Bootstrap();
-        fwd2.group(inboundChannel.eventLoop())
+        fwd2.group(EventLoopFactory.getWorker2())
                 .channel(ctx.channel().getClass())
                 .handler(new DiscardServerHandler()) // EDIT
                 .option(ChannelOption.AUTO_READ, false);

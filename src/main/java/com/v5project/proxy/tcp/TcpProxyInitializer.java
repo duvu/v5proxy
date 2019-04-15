@@ -23,19 +23,19 @@ public class TcpProxyInitializer extends ChannelInitializer<SocketChannel> {
 
     private final String remoteHost;
     private final int remotePort;
-    private final String remoteHost2;
     private final int remotePort2;
 
     public TcpProxyInitializer(ProxyEntry proxyEntry) {
                 this.remoteHost = proxyEntry.getRemoteList().get(0).getHost();
                 this.remotePort = proxyEntry.getRemoteList().get(0).getPort();
-                this.remoteHost2 = proxyEntry.getRemoteList().get(1).getHost();
-                this.remotePort2 = proxyEntry.getRemoteList().get(1).getPort();
+//                this.remoteHost2 = proxyEntry.getRemoteList().get(1).getHost();
+//                this.remotePort2 = proxyEntry.getRemoteList().get(1).getPort();
+        remotePort2 = proxyEntry.getPort1();
     }
 
     @Override
     public void initChannel(SocketChannel ch) {
         ch.pipeline()
-                .addLast(new TcpFrontendHandler(remoteHost, remotePort,remoteHost2,remotePort2));
+                .addLast(new TcpFrontendHandler(remoteHost, remotePort,remotePort2));
     }
 }

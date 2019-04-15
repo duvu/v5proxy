@@ -27,30 +27,18 @@ import io.netty.util.concurrent.GlobalEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
+public class TcpForwarder extends ChannelInboundHandlerAdapter {
 
     private final String remoteHost;
     private final int remotePort;
 
-    private final String remoteHost2;
-    private final int remotePort2;
-
-    // As we use inboundChannel.eventLoop() when buildling the Bootstrap this does not need to be volatile as
-    // the server2OutboundChannel will use the same EventLoop (and therefore Thread) as the inboundChannel.
     private Channel server2OutboundChannel;
-    private Channel server3OutboundChannel;
     Logger LOGGER = LoggerFactory.getLogger(this.getClass());
-    // TODO You should change this to your own executor
     private ChannelGroup channels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
 
-    final EventLoopGroup worker1 = new NioEventLoopGroup(4);
-    final EventLoopGroup worker2 = new NioEventLoopGroup(8);
-
-    public TcpFrontendHandler(String remoteHost, int remotePort, int remotePort2) {
+    public TcpForwarder(String remoteHost, int remotePort) {
         this.remoteHost = remoteHost;
         this.remotePort = remotePort;
-        this.remoteHost2 = "127.0.0.1";
-        this.remotePort2 = remotePort2;
     }
 
     @Override
@@ -78,18 +66,8 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
             }
         });
 
-        // Start the connection attempt to SERVER 3
-        Bootstrap fwd2 = new Bootstrap();
-        fwd2.group(inboundChannel.eventLoop())
-                .channel(ctx.channel().getClass())
-                .handler(new DiscardServerHandler()) // EDIT
-                .option(ChannelOption.AUTO_READ, false);
-        ChannelFuture server3Future = fwd2.connect(remoteHost2, remotePort2);
-        server3OutboundChannel = server3Future.channel();
-        //System.out.println("High Water Mark" + server3OutboundChannel.config().getWriteBufferHighWaterMark());
-        // Here we are going to add channels to channel group to save bytebuf work
         channels.add(server2OutboundChannel);
-        channels.add(server3OutboundChannel);
+
     }
 
     // You can keep this the same below or use the commented out section
@@ -99,7 +77,7 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
         ByteBuf msg  = (ByteBuf)buf;
         msg.retain();
         writeToChannel(ctx, buf, server2OutboundChannel);
-        writeToChannel(ctx, buf, server3OutboundChannel);
+
     }
 
     private void writeToChannel(final ChannelHandlerContext ctx, Object msg, final Channel channel) {
@@ -109,7 +87,7 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
                 @Override
                 public void operationComplete(ChannelFuture future) throws Exception {
                     if (future.isSuccess()) {
-                        LOGGER.info(String.format("ENTRY POINT# to %s", channel.remoteAddress().toString()));
+                        LOGGER.info(String.format("Sent to %s", channel.remoteAddress().toString()));
                         ctx.channel().read();
                     } else {
                         future.channel().close();
@@ -124,13 +102,6 @@ public class TcpFrontendHandler extends ChannelInboundHandlerAdapter {
         if (server2OutboundChannel != null) {
             closeOnFlush(server2OutboundChannel);
         }
-        if (server3OutboundChannel != null) {
-            closeOnFlush(server3OutboundChannel);
-        }
-
-
-        // Optionally can do this
-//        channels.writeAndFlush(Unpooled.EMPTY_BUFFER).addListener(ChannelFutureListener.CLOSE);
     }
 
     @Override

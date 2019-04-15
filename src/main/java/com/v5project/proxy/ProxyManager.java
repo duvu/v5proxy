@@ -2,15 +2,22 @@ package com.v5project.proxy;
 
 import com.v5project.proxy.config.ConfigurationManager;
 import com.v5project.proxy.config.ProxyEntry;
+import com.v5project.proxy.config.RemoteEndpoint;
+import com.v5project.proxy.tcp.TcpForwarder;
 import com.v5project.proxy.tcp.TcpProxyInitializer;
 import com.v5project.proxy.udp.UdpProxyInitializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
+import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
+import io.netty.channel.group.ChannelGroup;
+import io.netty.channel.group.DefaultChannelGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
+import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioDatagramChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.GlobalEventExecutor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,7 +32,7 @@ public class ProxyManager {
     //-- close later
     private final NioEventLoopGroup bossGroup;
     private final NioEventLoopGroup workerGroup;
-
+    private final ChannelGroup channelGroup = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
     private final Logger LOGGER = LoggerFactory.getLogger(this.getClass());
 
     private static ProxyManager instance = null;
@@ -62,6 +69,25 @@ public class ProxyManager {
                             .childHandler(new TcpProxyInitializer(proxy))
                             .childOption(ChannelOption.AUTO_READ, true);
                 Channel channel = b.bind(proxy.getPort()).sync().channel();
+                channelGroup.add(channel);
+
+
+                final RemoteEndpoint rep1 = proxy.getRemoteList().get(1);
+                ServerBootstrap b1 = new ServerBootstrap();
+
+                NioEventLoopGroup bossGroup1 = new NioEventLoopGroup(2);
+                NioEventLoopGroup workerGroup1 = new NioEventLoopGroup(4);
+
+                b1.group(bossGroup1, workerGroup1)
+                        .channel(NioServerSocketChannel.class)
+                        .childHandler(new ChannelInitializer<SocketChannel>() {
+                            protected void initChannel(SocketChannel ch) throws Exception {
+                                ch.pipeline().addLast(new TcpForwarder(rep1.getHost(), rep1.getPort()));
+                            }
+                        });
+
+                Channel channel1 = b1.bind(proxy.getPort1()).sync().channel();
+                channelGroup.add(channel1);
 
             } else {
                     Bootstrap b = new Bootstrap();
@@ -69,6 +95,8 @@ public class ProxyManager {
                             .channel(NioDatagramChannel.class)
                             .handler(new UdpProxyInitializer(proxy))
                             .bind(proxy.getPort()).sync().channel();
+
+                    channelGroup.add(channel);
             }
         }
     }
@@ -76,11 +104,6 @@ public class ProxyManager {
     @PreDestroy
     public void onDestroy() {
         LOGGER.info("Shutting down the proxy");
-        try {
-            bossGroup.shutdownGracefully();
-            workerGroup.shutdownGracefully();
-        } catch (Exception e) {
-            LOGGER.error("Not able to shutdown the proxy", e);
-        }
+        channelGroup.close().awaitUninterruptibly();
     }
 }

@@ -58,6 +58,7 @@ public final class ConfigurationManager {
                 HierarchicalConfiguration<ImmutableNode> sub = config.configurationAt(key);
                 ProxyEntry p = new ProxyEntry();
                 p.setPort(sub.getInt("port"));
+                p.setPort1(sub.getInt("port1"));
                 p.setDuplex(sub.getBoolean("duplex"));
                 p.setEnabled(sub.getBoolean("enabled"));
                 p.setRemoteList(getRemoteList(sub));

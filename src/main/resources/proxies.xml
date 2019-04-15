@@ -9,6 +9,7 @@
 
         <proxy>
             <port>31272</port>
+            <port1>31273</port1>
             <duplex>true</duplex>
             <enabled>true</enabled>
             <remotes>
@@ -27,6 +28,7 @@
 
         <proxy>
             <port>23456</port>
+            <port1>23455</port1>
             <duplex>false</duplex>
             <enabled>true</enabled>
             <remotes>
@@ -45,6 +47,7 @@
 
         <proxy>
             <port>37493</port>
+            <port1>37495</port1>
             <duplex>false</duplex>
             <enabled>true</enabled>
             <remotes>
@@ -63,6 +66,7 @@
 
         <proxy>
             <port>37494</port>
+            <port1>37496</port1>
             <duplex>false</duplex>
             <enabled>true</enabled>
             <remotes>

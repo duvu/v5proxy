@@ -7,6 +7,7 @@ import java.util.List;
  */
 public class ProxyEntry {
     private int port;
+    private int port1;
     private boolean duplex;
     private boolean enabled;
     private List<RemoteEndpoint> remoteList;
@@ -17,6 +18,14 @@ public class ProxyEntry {
 
     public void setPort(int port) {
         this.port = port;
+    }
+
+    public int getPort1() {
+        return port1;
+    }
+
+    public void setPort1(int port1) {
+        this.port1 = port1;
     }
 
     public boolean isDuplex() {
